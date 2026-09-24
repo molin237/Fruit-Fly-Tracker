@@ -220,11 +220,11 @@ python ../main.py
 - Connor Tully
 - Grace Le
 
-**Course**
+**Course: **
 CS Capstone - Instructor Alan Saporta
 
-**Academic Year**
+**Academic Year: **
 Spring 2026
 
-**Research Sponsor**
+**Research Sponsor: **
 Dr. James Kezos, Fly Lab, CSUSM
