@@ -1,0 +1,14 @@
+# core computer vision
+opencv-python>=4.8.0
+
+# numerical computing (used for distance/velocity calculations)
+numpy>=1.24.0
+
+# GUI framework
+customtkinter>=5.2.0
+
+# drag-and-drop support for tkinter
+tkinterdnd2>=0.3.0
+
+# image handling for the GUI preview panel
+Pillow>=10.0.0

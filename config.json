@@ -1,0 +1,89 @@
+{
+  "known_distance_cm": 13.0,
+  "gaussian_blur_size": 13,
+  "adaptive_block_size": 11,
+  "adaptive_constant": 7,
+  "min_contour_area": 21,
+  "search_radius": 50,
+  "output_video_basename": "tracked_output",
+  "preset_scale": 0.02203134,
+  "default_n_tubes": 10,
+  "tube_half_w": 42,
+  "tube_half_h": 370,
+  "tube_rois": [
+    [
+      372,
+      390,
+      84,
+      690
+    ],
+    [
+      468,
+      385,
+      84,
+      695
+    ],
+    [
+      578,
+      377,
+      84,
+      703
+    ],
+    [
+      666,
+      371,
+      84,
+      709
+    ],
+    [
+      762,
+      368,
+      84,
+      712
+    ],
+    [
+      856,
+      363,
+      84,
+      717
+    ],
+    [
+      952,
+      360,
+      84,
+      720
+    ],
+    [
+      1045,
+      360,
+      84,
+      720
+    ],
+    [
+      1128,
+      363,
+      84,
+      717
+    ],
+    [
+      1235,
+      357,
+      84,
+      723
+    ]
+  ],
+  "active_preset": "Kezos 1",
+  "max_contour_area": 201,
+  "use_static_mask": false,
+  "static_mask_sample_frames": 100,
+  "static_mask_overlap_threshold": 0.6,
+  "static_mask_occupancy_threshold": 0.7,
+  "static_mask_build_block_size": 15,
+  "static_mask_build_constant": 3,
+  "static_mask_build_blur_size": 7,
+  "static_mask_build_min_area": 30,
+  "static_mask_build_max_area": 2000,
+  "static_bottom_exclusion_px": 53,
+  "output_folder_template": "{video_name}_{timestamp}",
+  "output_filename_template": "{video_name}_{basename}_{fly_label}_{timestamp}"
+}
