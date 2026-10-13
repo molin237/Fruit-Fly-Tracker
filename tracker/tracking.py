@@ -30,7 +30,8 @@ import utils.config as cfg  # imported as module (not `from X import Y`) so we
 # Since the metrics text is always roughly the same length
 # a fixed panel width works rather than needing per-frame sizing.
 TEXT_PANEL_WIDTH_PX = 260
-
+rectangles = []
+circles = []
 
 def _clean_filename_parts(name):
     """
@@ -559,6 +560,11 @@ def track_fly(video_path, scale, output_dir=None, fly_label=None,
                 cv2.rectangle(frame, (bx, by), (bx + bw, by + bh), (0, 255, 0), 1)
                 cv2.circle(frame, (cx, cy), 3, (0, 0, 255), -1)
 
+                circles.append((cx, cy, 3))
+                
+                for circle in circles:
+                    cv2.circle(frame, (circle[0], circle[1]), circle[2], (0, 0, 255), -1)
+
                 label_x = bx
                 label_y = max(0, by - 10)  # keep label on-screen if box is near the top
                 cv2.putText(frame, "Fly", (label_x, label_y),
@@ -644,6 +650,7 @@ def track_fly(video_path, scale, output_dir=None, fly_label=None,
     cap.release()
     out.release()
     cv2.destroyAllWindows()
+    circles.clear()
 
     print(f"\nTRACKING COMPLETE")
     print(f"Processed {frame_count} frames")
