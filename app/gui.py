@@ -629,8 +629,9 @@ def reset_tube_selection():
     app_state["tube_rois"].clear()
     clear_tube_overlay()
     clear_bottom_exclusion_overlay()
-    #confirm_btn.grid_remove()
-    #reset_roi_btn.grid_remove()
+    confirm_btn.grid_remove()
+    reset_roi_btn.grid_remove()
+    toggle_path_trace_switch.grid_remove()
  
     n = n_tubes_var.get()
     mode = "tube_centers"
