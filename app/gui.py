@@ -125,6 +125,8 @@ progress_label = None
 calibration_reset_btn = None
 cancel_btn = None
 cancel_requested = False
+is_Fly_Tracing_On = False
+toggle_path_trace_switch = None
 confirm_btn = None # shown after centers are clicked before tracking starts
 reset_roi_btn = None # lets user reclick centers without reloading video
 n_tubes_var = None
@@ -568,7 +570,7 @@ def on_canvas_click(event):
                 label.configure(text=f"All {n} tubes placed.\nConfirm to start tracking\nor Reset to re-click.")
                 confirm_btn.grid()
                 reset_roi_btn.grid()
-
+                toggle_path_trace_switch.grid()
 
 def on_canvas_drag(event):
     global roi_rect_id, roi_start
@@ -627,8 +629,8 @@ def reset_tube_selection():
     app_state["tube_rois"].clear()
     clear_tube_overlay()
     clear_bottom_exclusion_overlay()
-    confirm_btn.grid_remove()
-    reset_roi_btn.grid_remove()
+    #confirm_btn.grid_remove()
+    #reset_roi_btn.grid_remove()
  
     n = n_tubes_var.get()
     mode = "tube_centers"
@@ -810,6 +812,7 @@ def run_tracking(path, scale, roi):
             roi=roi,
             frame_callback=safe_show_frame,
             progress_callback=set_progress,
+            is_tracing_enabled=is_Fly_Tracing_On
         )
 
         # export CSV and return path
@@ -854,7 +857,7 @@ def run_multi_tracking(path, scale, rois):
             set_progress(overall_value, status_text=f"Fly {current_fly}/{n}: {pct}%")
 
         results = track_flies(
-            path, scale, rois,
+            path, scale, rois, is_Fly_Tracing_On,
             output_dir=output_dir,
             frame_callback=safe_show_frame,
             progress_callback=multi_progress,
@@ -874,6 +877,10 @@ def run_multi_tracking(path, scale, rois):
         root.after(0, lambda: label.configure(text=f"Tracking failed:\n{e}"))
         root.after(0, lambda: select_btn.configure(state="normal"))
 
+def toggle_tracing():
+    global is_Fly_Tracing_On
+    is_Fly_Tracing_On = not is_Fly_Tracing_On
+
 def start_tracking():
     """
     Branch into single or multi tracking based on tube count.
@@ -885,6 +892,7 @@ def start_tracking():
     unlock_selection_display()
     confirm_btn.grid_remove()
     reset_roi_btn.grid_remove()
+    toggle_path_trace_switch.grid_remove()
 
     # reset and show progress bar
     progress_bar.set(0)
@@ -949,6 +957,7 @@ def process_video(path):
     unlock_selection_display()
     confirm_btn.grid_remove()
     reset_roi_btn.grid_remove()
+    toggle_path_trace_switch.grid_remove()
 
     frame = load_first_frame(path)
     if frame is None:
@@ -1001,6 +1010,7 @@ def process_video(path):
                      f"Confirm or Reset to re-click.")
             confirm_btn.grid()
             reset_roi_btn.grid()
+            toggle_path_trace_switch.grid()
         elif n > 1:
             # scale known but no saved centers, ask user to click centers
             mode = "tube_centers"
@@ -1099,7 +1109,7 @@ def make_tab_btn(sidebar, name, icon, label_text, command):
 # TRACK TAB
 def build_track_tab(parent):
     global label, select_btn, results_panel, progress_bar, progress_label
-    global cancel_btn, calibration_reset_btn, confirm_btn, reset_roi_btn, n_tubes_var
+    global cancel_btn, calibration_reset_btn, toggle_path_trace_switch, confirm_btn, reset_roi_btn, n_tubes_var
  
     frame = ctk.CTkFrame(parent, fg_color="transparent")
  
@@ -1157,14 +1167,17 @@ def build_track_tab(parent):
     btn_frame.pack(fill="x", padx=10, pady=(0, 4))
     btn_frame.columnconfigure(0, weight=1)
     btn_frame.columnconfigure(1, weight=1)
+    toggle_path_trace_switch = ctk.CTkSwitch(btn_frame, text="Trace Path", command=toggle_tracing)
+    toggle_path_trace_switch.grid(row=0, column=0, sticky="ew", padx=(0, 0))
     confirm_btn = ctk.CTkButton(btn_frame, text="Confirm", command=start_tracking,
                                  fg_color="green", hover_color="darkgreen")
-    confirm_btn.grid(row=0, column=0, sticky="ew", padx=(0, 4))
+    confirm_btn.grid(row=1, column=0, sticky="ew", padx=(0, 4))
     reset_roi_btn = ctk.CTkButton(btn_frame, text="Reset", command=reset_tube_selection,
                                    fg_color=("gray60", "gray40"))
-    reset_roi_btn.grid(row=0, column=1, sticky="ew")
+    reset_roi_btn.grid(row=1, column=1, sticky="ew")
     confirm_btn.grid_remove()
     reset_roi_btn.grid_remove()
+    toggle_path_trace_switch.grid_remove()
  
     calibration_reset_btn = ctk.CTkButton(left, text="Reset Calibration",
                                            command=reset_calibration,

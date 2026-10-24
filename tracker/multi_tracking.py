@@ -3,7 +3,7 @@ from tracker.tracking import track_fly
 from utils.config import get_app_dir
 
 
-def track_flies(video_path, scale, rois, output_dir=None,
+def track_flies(video_path, scale, rois, is_tracing_enabled=None, output_dir=None,
                 frame_callback=None, progress_callback=None,
                 cancel_flag=None):
     """
@@ -71,6 +71,7 @@ def track_flies(video_path, scale, rois, output_dir=None,
         positions, summary = track_fly(
             video_path,
             scale,
+            is_tracing_enabled,
             output_dir=output_dir,
             fly_label=fly_label,
             show_live=False,
