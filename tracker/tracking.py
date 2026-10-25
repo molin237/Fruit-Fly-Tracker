@@ -30,8 +30,6 @@ import utils.config as cfg  # imported as module (not `from X import Y`) so we
 # Since the metrics text is always roughly the same length
 # a fixed panel width works rather than needing per-frame sizing.
 TEXT_PANEL_WIDTH_PX = 260
-rectangles = []
-circles = []
 
 def _clean_filename_parts(name):
     """
@@ -289,8 +287,7 @@ def contour_overlap_fraction(contour, static_mask):
     overlap_px = cv2.countNonZero(cv2.bitwise_and(contour_mask, static_mask))
     return overlap_px / contour_area_px
 
-
-def track_fly(video_path, scale, output_dir=None, fly_label=None,
+def track_fly(video_path, scale, is_tracing_enabled=None, output_dir=None, fly_label=None,
               show_live=True, roi=None, search_radius=None,
               frame_callback=None, progress_callback=None,
               use_static_mask=None, bottom_exclusion_px=None):
@@ -392,6 +389,7 @@ def track_fly(video_path, scale, output_dir=None, fly_label=None,
     # tracking state
     frame_count = 0
     positions = []
+    circles = []
     prev_position = None
     total_distance = 0.0
     time_per_frame = 1.0 / fps
@@ -560,10 +558,11 @@ def track_fly(video_path, scale, output_dir=None, fly_label=None,
                 cv2.rectangle(frame, (bx, by), (bx + bw, by + bh), (0, 255, 0), 1)
                 cv2.circle(frame, (cx, cy), 3, (0, 0, 255), -1)
 
-                circles.append((cx, cy, 3))
-                
-                for circle in circles:
-                    cv2.circle(frame, (circle[0], circle[1]), circle[2], (0, 0, 255), -1)
+                if is_tracing_enabled:    
+                    circles.append((cx, cy, 1))
+
+                    for circle in circles:
+                        cv2.circle(frame, (circle[0], circle[1]), circle[2], (0, 0, 150), -1)
 
                 label_x = bx
                 label_y = max(0, by - 10)  # keep label on-screen if box is near the top
