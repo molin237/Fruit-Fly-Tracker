@@ -287,6 +287,29 @@ def contour_overlap_fraction(contour, static_mask):
     overlap_px = cv2.countNonZero(cv2.bitwise_and(contour_mask, static_mask))
     return overlap_px / contour_area_px
 
+def calculate_straightness(positions):
+    """
+    Calculates a trajectory straightness metric from x and y positions
+    """
+    coordinates = [p[1:3] for p in positions]
+
+    if len(coordinates) < 2:
+        return None
+
+    points = np.asarray(coordinates)
+
+    # Euclidean normal form
+    step_distances = np.linalg.norm(np.diff(points, axis=0), axis=1)
+    total_distance = np.sum(step_distances)
+
+    if total_distance == 0:
+        return None
+
+    # straight line distance between last and first positions
+    displacement = np.linalg.norm(points[-1] - points[0])
+
+    return displacement / total_distance
+
 def track_fly(video_path, scale, is_tracing_enabled=None, output_dir=None, fly_label=None,
               show_live=True, roi=None, search_radius=None,
               frame_callback=None, progress_callback=None,
@@ -629,6 +652,7 @@ def track_fly(video_path, scale, is_tracing_enabled=None, output_dir=None, fly_l
     active_time_s = tracked_frames / fps
     denominator = total_frames if total_frames > 0 else frame_count
     pct_tracked = (tracked_frames / denominator * 100) if denominator > 0 else 0.0
+    straightness_score = calculate_straightness(positions)
 
     avg_velocity = 0.0
 
@@ -643,6 +667,7 @@ def track_fly(video_path, scale, is_tracing_enabled=None, output_dir=None, fly_l
         "total_frames":      total_frames,
         "tracked_frames":    tracked_frames,
         "pct_tracked":       round(pct_tracked, 2),
+        "straightness_score": round(straightness_score, 4)
     }
 
     # clean up and output results 
@@ -656,6 +681,7 @@ def track_fly(video_path, scale, is_tracing_enabled=None, output_dir=None, fly_l
     print(f"Total distance traveled: {total_distance:.2f} cm ({total_distance * 10:.2f} mm)")
     print(f"Active time: {active_time_s:.2f}s")
     print(f"Average velocity: {avg_velocity:.2f} cm/s")
+    print(f"Straightness: {straightness_score:.4f}")
     print(f"Output saved to: {output_path}")
 
     return positions, summary

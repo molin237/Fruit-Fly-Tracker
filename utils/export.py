@@ -87,6 +87,7 @@ def export_csv(positions, summary, fly_label=None, output_dir=None):
             writer.writerow(["total_frames",        summary["total_frames"]])
             writer.writerow(["tracked_frames",      summary["tracked_frames"]])
             writer.writerow(["pct_tracked",         summary["pct_tracked"]])
+            writer.writerow(["straightness_score",  summary["straightness_score"]])
             if fly_label:
                 writer.writerow(["fly_label", fly_label])
             writer.writerow([])  # blank separator row
@@ -160,7 +161,7 @@ def export_multi_csv(results, output_dir=None):
                 "fly_id",
                 "total_distance_cm", "total_distance_mm",
                 "avg_velocity_cm_s", "active_time_s",
-                "total_frames", "tracked_frames", "pct_tracked",
+                "total_frames", "tracked_frames", "pct_tracked", "straightness_score"
             ])
  
             for i, (positions, summary) in enumerate(results):
@@ -174,6 +175,7 @@ def export_multi_csv(results, output_dir=None):
                     summary["total_frames"],
                     summary["tracked_frames"],
                     summary["pct_tracked"],
+                    summary["straightness_score"]
                 ])
  
             writer.writerow([])
