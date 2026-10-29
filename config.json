@@ -83,7 +83,7 @@
   "static_mask_build_blur_size": 7,
   "static_mask_build_min_area": 30,
   "static_mask_build_max_area": 2000,
-  "static_bottom_exclusion_px": 53,
+  "static_bottom_exclusion_px": 56,
   "output_folder_template": "{video_name}_{timestamp}",
   "output_filename_template": "{video_name}_{basename}_{fly_label}_{timestamp}"
 }

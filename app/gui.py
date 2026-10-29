@@ -1691,6 +1691,33 @@ def build_quick_mask_controls(parent):
 
     bottom_excl_value_label.pack(side="left", padx=(0, 12))
 
+def build_general_settings_tab(parent):
+    frame = ctk.CTkFrame(parent, fg_color="transparent")
+
+    # Page title
+    ctk.CTkLabel(
+        frame,
+        text="General Settings",
+        font=ctk.CTkFont(size=16, weight="bold")
+    ).pack(anchor="w", padx=16, pady=(14, 12))
+
+    # Appearance setting label
+    ctk.CTkLabel(
+        frame,
+        text="Appearance",
+        font=ctk.CTkFont(size=13)
+    ).pack(anchor="w", padx=16)
+
+    # Appearance selector
+    appearance_selector = ctk.CTkSegmentButton(
+        frame,
+        values=["Dark", "Light", "Auto"]
+    )
+    appearance_selector.pack(anchor="w", padx=16, pady=10)
+    appearance_selector.set("Auto")
+
+    tab_frames["general_settings"] = frame
+    return frame
 
 # main build ui
 def build_ui():
@@ -1711,6 +1738,10 @@ def build_ui():
     ctk.set_default_color_theme("blue")
  
     root = TkinterDnD.Tk()
+
+    dark_mode = ctk.get_appearance_mode() == "Dark"
+    root.configure(bg="#242424" if dark_mode else "#f2f2f2")
+
     root.geometry("1500x860")
     root.title("Fruit Fly Tracker")
  
