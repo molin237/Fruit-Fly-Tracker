@@ -1089,7 +1089,6 @@ def switch_tab(name):
         else:
             frame.pack_forget()
  
- 
 def make_tab_btn(sidebar, name, icon, label_text, command):
     btn = ctk.CTkButton(
         sidebar,
@@ -1691,6 +1690,37 @@ def build_quick_mask_controls(parent):
 
     bottom_excl_value_label.pack(side="left", padx=(0, 12))
 
+# APPEARANCE TAB
+def build_appearance_tab(parent):
+    frame = ctk.CTkFrame(parent, fg_color="transparent")
+
+    appearance_header = ctk.CTkFrame(frame, fg_color="transparent")
+    appearance_header.pack(fill="x", padx=16, pady=(14, 2))
+
+    ctk.CTkLabel(appearance_header, text="Appearance",
+                    font=ctk.CTkFont(size=16, weight="bold")).pack(side="left")
+
+    # theme selection
+    def change_appearance_mode(choice):
+        if choice == "Auto":
+            # System = follow the operating system's theme setting
+            ctk.set_appearance_mode("System")
+        else:
+            ctk.set_appearance_mode(choice)
+
+    ctk.CTkLabel(frame, text="Theme",
+                 font=ctk.CTkFont(size=12)).pack(anchor="w", padx=16, pady=(12, 4))
+
+    theme_selector = ctk.CTkSegmentedButton(
+        frame,
+        values=["Light", "Dark", "Auto"],
+        command=change_appearance_mode
+    )
+    theme_selector.pack(anchor="w", padx=16, pady=(0, 10))
+    theme_selector.set("Light")
+
+    tab_frames["appearance"] = frame
+    return frame
 
 # main build ui
 def build_ui():
@@ -1707,15 +1737,20 @@ def build_ui():
  
     load_config()
  
-    ctk.set_appearance_mode("System")
+    ctk.set_appearance_mode("Light")
     ctk.set_default_color_theme("blue")
  
     root = TkinterDnD.Tk()
     root.geometry("1500x860")
     root.title("Fruit Fly Tracker")
+
+    # background properly follows the chosen appearance mode
+    main_frame = ctk.CTkFrame(root, fg_color=("gray92", "gray14"),
+                              corner_radius=0)
+    main_frame.pack(fill="both", expand=True)
  
     # sidebar
-    sidebar = ctk.CTkFrame(root, width=190, corner_radius=0,
+    sidebar = ctk.CTkFrame(main_frame, width=190, corner_radius=0,
                             fg_color=("gray92", "gray18"))
     sidebar.pack(side="left", fill="y")
     sidebar.pack_propagate(False)
@@ -1730,11 +1765,11 @@ def build_ui():
                  text_color=("gray55", "gray55")).pack(anchor="w", padx=14, pady=(4, 0))
  
     # tab content area
-    content_area = ctk.CTkFrame(root, fg_color="transparent")
+    content_area = ctk.CTkFrame(main_frame, fg_color=("gray92", "gray14"))
     content_area.pack(side="left", expand=True, fill="both")
  
     # right panel: canvas always visible on the right
-    right_frame = ctk.CTkFrame(root)
+    right_frame = ctk.CTkFrame(main_frame)
     right_frame.pack(side="right", expand=True, fill="both", padx=10, pady=10)
  
     # quick-access strip for the static shadow-mask toggle and slider
@@ -1758,6 +1793,7 @@ def build_ui():
     build_presets_tab(content_area)
     build_roi_setup_tab(content_area)
     build_parameters_tab(content_area)
+    build_appearance_tab(content_area)
  
     # sidebar buttons (after frames exist)
     make_tab_btn(sidebar, "track", "▶",  "Track",      lambda: switch_tab("track"))
@@ -1767,7 +1803,11 @@ def build_ui():
                  text_color=("gray55", "gray55")).pack(anchor="w", padx=14, pady=(10, 0))
     make_tab_btn(sidebar, "roi_setup", "*", "ROI Setup",  lambda: switch_tab("roi_setup"))
     make_tab_btn(sidebar, "parameters", "*", "Parameters", lambda: switch_tab("parameters"))
- 
+
+    ctk.CTkLabel(sidebar, text="GENERAL", font=ctk.CTkFont(size=10),
+                  text_color=("gray55", "gray55")).pack(anchor="w", padx=14, pady=(10, 0))
+    make_tab_btn(sidebar, "appearance", "*", "Appearance", lambda: switch_tab("appearance"))
+
     switch_tab("track")  # default tab
 
     root.after(preview_delay_ms, update_preview)
