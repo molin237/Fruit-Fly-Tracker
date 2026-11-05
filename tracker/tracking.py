@@ -290,9 +290,10 @@ def contour_overlap_fraction(contour, static_mask):
     overlap_px = cv2.countNonZero(cv2.bitwise_and(contour_mask, static_mask))
     return overlap_px / contour_area_px
 
-def calculate_straightness(positions):
+def calculate_vertical_efficiency(positions):
     """
-    Calculates a trajectory straightness metric from x and y positions
+    Calculates a vertical efficiency metric from x and y positions
+    where upward displacement is divided by total path length.
     """
     coordinates = [p[1:3] for p in positions]
 
@@ -308,10 +309,10 @@ def calculate_straightness(positions):
     if total_distance == 0:
         return None
 
-    # straight line distance between last and first positions
-    displacement = np.linalg.norm(points[-1] - points[0])
+    # vertical distance between first and last positions
+    upward_displacement = points[0, 1] - points[-1, 1]
 
-    return displacement / total_distance
+    return upward_displacement / total_distance
 
 def track_fly(video_path, scale, is_tracing_enabled=None, output_dir=None, fly_label=None,
               show_live=True, roi=None, search_radius=None,
@@ -661,7 +662,7 @@ def track_fly(video_path, scale, is_tracing_enabled=None, output_dir=None, fly_l
     active_time_s = tracked_frames / fps
     denominator = total_frames if total_frames > 0 else frame_count
     pct_tracked = (tracked_frames / denominator * 100) if denominator > 0 else 0.0
-    straightness_score = calculate_straightness(positions)
+    straightness_score = calculate_vertical_efficiency(positions)
 
     avg_velocity = 0.0
 
