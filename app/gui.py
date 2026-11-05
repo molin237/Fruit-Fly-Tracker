@@ -11,6 +11,7 @@ import queue
 from tracker.tracking import track_fly, build_run_output_dir
 from tracker.multi_tracking import track_flies
 from utils.export import export_csv, export_multi_csv
+from utils.export_plot import export_trace_plot
 from utils.config import (
     load_config,
     save_config,
@@ -817,15 +818,17 @@ def run_tracking(path, scale, roi):
         )
 
         # export CSV and return path
+        # export trace plot, does not need to use returned path
         # fly label = None for now since we are doing 1 fly
-        # whem multi fly tracking starts we just label fly_label="fly_0x" etc.
+        # when multi fly tracking starts we just label fly_label="fly_0x" etc.
 
         csv_path = export_csv(positions, summary, fly_label=None)
+        export_trace_plot(positions, fly_label="Fly_01")
         
         # when tracking is complete
         root.after(0, lambda: set_progress(1.0))
         root.after(0, lambda: cancel_btn.pack_forget())
-        root.after(0, lambda: label.configure(text="Tracking complete!\nSaved to output_videos\nand output_data"))
+        root.after(0, lambda: label.configure(text="Tracking complete!\nSaved to output_videos,\noutput_data, and output_plot"))
         root.after(0, lambda: update_results_panel(summary, csv_path))
         root.after(0, lambda: select_btn.configure(state="normal"))
 
