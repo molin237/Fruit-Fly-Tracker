@@ -78,7 +78,12 @@ def track_flies(video_path, scale, rois, is_tracing_enabled=None, output_dir=Non
             roi=roi,
             frame_callback=frame_callback,
             progress_callback=make_progress_wrapper(i),
+            cancel_flag=cancel_flag,
         )
+
+        # stop without adding the interrupted fly to completed results
+        if cancel_flag and cancel_flag():
+            break
 
         # fly_id to summary so export_multi_csv can use it
         # without having to find it from list position

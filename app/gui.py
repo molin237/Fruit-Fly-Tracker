@@ -639,6 +639,8 @@ def reset_tube_selection():
 
 # queue for video preview
 def safe_show_frame(frame):
+    if cancel_requested:
+        return
     try:
         preview_queue.put_nowait(frame.copy())
     except queue.Full:
@@ -655,7 +657,8 @@ def safe_show_frame(frame):
 def update_preview():
     try:
         frame = preview_queue.get_nowait()
-        show_frame_on_canvas(frame)
+        if not cancel_requested:
+            show_frame_on_canvas(frame)
     except queue.Empty:
         pass
 
@@ -793,7 +796,28 @@ def request_cancel():
     global cancel_requested
     cancel_requested = True
     cancel_btn.pack_forget()
-    label.configure(text="Cancelling after current fly...")
+
+    # discards the frames waiting to be displayed
+    while True:
+        try:
+            preview_queue.get_nowait()
+        except queue.Empty:
+            break
+
+    cancel_btn.pack_forget()
+    label.configure(text="Cancelling tracking...")
+
+# immediately stops the video in the application when button is pressed
+def finish_cancelled_tracking():
+    """Gets called on the GUI thread after analysis is stopped"""
+    cancel_btn.pack_forget()
+    progress_label.configure(text="Cancelled")
+    label.configure(
+        text="Tracking cancelled.\n"
+                "Partial videos may be saved\n"
+                "in output_videos."
+    )
+    select_btn.configure(state="normal")
 
 def run_tracking(path, scale, roi):
     """
@@ -813,8 +837,13 @@ def run_tracking(path, scale, roi):
             roi=roi,
             frame_callback=safe_show_frame,
             progress_callback=set_progress,
-            is_tracing_enabled=is_Fly_Tracing_On
+            is_tracing_enabled=is_Fly_Tracing_On,
+            cancel_flag=lambda: cancel_requested,
         )
+
+        if cancel_requested:
+            root.after(0, finish_cancelled_tracking)
+            return
 
         # export CSV and return path
         # fly label = None for now since we are doing 1 fly
@@ -864,6 +893,10 @@ def run_multi_tracking(path, scale, rois):
             progress_callback=multi_progress,
             cancel_flag=lambda: cancel_requested,
         )
+
+        if cancel_requested:
+            root.after(0, finish_cancelled_tracking)
+            return
  
         csv_path = export_multi_csv(results)
         n_completed = len(results) 

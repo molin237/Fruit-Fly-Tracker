@@ -117,7 +117,7 @@ def build_output_path(output_dir, fly_label=None, input_video=None):
 def build_static_exclusion_mask(video_path, roi=None, sample_frames=None,
                                  block_size=None, constant=None, blur_size=None,
                                  min_area=None, max_area=None,
-                                 occupancy_threshold=None):
+                                 occupancy_threshold=None, cancel_flag=None):
     """
     Sample frames spread across the video, run each one through the SAME
     detection pipeline used for real tracking (blur -> adaptive threshold ->
@@ -217,6 +217,9 @@ def build_static_exclusion_mask(video_path, roi=None, sample_frames=None,
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
 
     while n_read < n_samples and frame_idx < total:
+        if cancel_flag and cancel_flag():
+            break
+
         cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
         ret, frame = cap.read()
         if not ret:
@@ -287,10 +290,34 @@ def contour_overlap_fraction(contour, static_mask):
     overlap_px = cv2.countNonZero(cv2.bitwise_and(contour_mask, static_mask))
     return overlap_px / contour_area_px
 
+def calculate_straightness(positions):
+    """
+    Calculates a trajectory straightness metric from x and y positions
+    """
+    coordinates = [p[1:3] for p in positions]
+
+    if len(coordinates) < 2:
+        return None
+
+    points = np.asarray(coordinates)
+
+    # Euclidean normal form
+    step_distances = np.linalg.norm(np.diff(points, axis=0), axis=1)
+    total_distance = np.sum(step_distances)
+
+    if total_distance == 0:
+        return None
+
+    # straight line distance between last and first positions
+    displacement = np.linalg.norm(points[-1] - points[0])
+
+    return displacement / total_distance
+
 def track_fly(video_path, scale, is_tracing_enabled=None, output_dir=None, fly_label=None,
               show_live=True, roi=None, search_radius=None,
               frame_callback=None, progress_callback=None,
-              use_static_mask=None, bottom_exclusion_px=None):
+              use_static_mask=None, bottom_exclusion_px=None,
+              cancel_flag=None):
     """
     Track a single fruit fly across video frames using adaptive thresholding and contour detection.
 
@@ -376,7 +403,7 @@ def track_fly(video_path, scale, is_tracing_enabled=None, output_dir=None, fly_l
     # tube slots, etc.) that would otherwise get picked up as a fly
     static_mask = None
     if use_static_mask:
-        static_mask = build_static_exclusion_mask(video_path, roi=roi)
+        static_mask = build_static_exclusion_mask(video_path, roi=roi, cancel_flag=cancel_flag)
         if static_mask is not None:
             excluded_px = int(np.count_nonzero(static_mask))
             total_px = static_mask.size
@@ -402,6 +429,10 @@ def track_fly(video_path, scale, is_tracing_enabled=None, output_dir=None, fly_l
         cv2.namedWindow("Fly Tracking with Metrics", cv2.WINDOW_NORMAL)
 
     while True:
+        # cancellation flag so cancellation stops processing at the next frame
+        if cancel_flag and cancel_flag():
+            break
+        
         # track whether we actually advanced to a new frame this loop iteration.
         # this prevents double-counting distance/positions when paused.
         frame_advanced = False
@@ -620,6 +651,7 @@ def track_fly(video_path, scale, is_tracing_enabled=None, output_dir=None, fly_l
                 paused = False
                 print("Reset to start")
 
+
     # summary stats
     # tracked_frames = number of frames where fly was detected
     # active_time_s = how many seconds that represents at video FPS
@@ -629,6 +661,7 @@ def track_fly(video_path, scale, is_tracing_enabled=None, output_dir=None, fly_l
     active_time_s = tracked_frames / fps
     denominator = total_frames if total_frames > 0 else frame_count
     pct_tracked = (tracked_frames / denominator * 100) if denominator > 0 else 0.0
+    straightness_score = calculate_straightness(positions)
 
     avg_velocity = 0.0
 
@@ -643,6 +676,7 @@ def track_fly(video_path, scale, is_tracing_enabled=None, output_dir=None, fly_l
         "total_frames":      total_frames,
         "tracked_frames":    tracked_frames,
         "pct_tracked":       round(pct_tracked, 2),
+        "straightness_score": round(straightness_score, 4)
     }
 
     # clean up and output results 
@@ -656,6 +690,7 @@ def track_fly(video_path, scale, is_tracing_enabled=None, output_dir=None, fly_l
     print(f"Total distance traveled: {total_distance:.2f} cm ({total_distance * 10:.2f} mm)")
     print(f"Active time: {active_time_s:.2f}s")
     print(f"Average velocity: {avg_velocity:.2f} cm/s")
+    print(f"Straightness: {straightness_score:.4f}")
     print(f"Output saved to: {output_path}")
 
     return positions, summary
