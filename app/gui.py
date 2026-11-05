@@ -1148,7 +1148,11 @@ def build_track_tab(parent):
  
     # split: left control panel + right canvas
     left = ctk.CTkFrame(frame, width=260)
-    left.pack(side="left", fill="y", padx=(10, 0), pady=10)
+    left.pack(side="left", 
+              fill="y", 
+              padx=(10, 0), 
+              pady=10
+        )
     left.pack_propagate(False)
  
     # drag & drop label
@@ -1181,7 +1185,21 @@ def build_track_tab(parent):
     ctk.CTkLabel(tube_frame, text="(1 = single fly)",
                  font=ctk.CTkFont(size=10),
                  text_color=("gray50", "gray60"), anchor="w").pack(side="left", padx=(6, 0))
- 
+
+        # Select File button
+    select_btn = ctk.CTkButton(
+        left,
+        text="Select File",
+        command=select_file,
+        height=40
+    )
+    select_btn.pack(
+        side="top", 
+        fill="x", 
+        padx=10, 
+        pady=(10, 10)
+    )
+    
     # progress bar
     prog_frame = ctk.CTkFrame(left, fg_color="transparent")
     prog_frame.pack(fill="x", padx=10, pady=(0, 4))
@@ -1220,18 +1238,41 @@ def build_track_tab(parent):
     cancel_btn = ctk.CTkButton(left, text="Cancel Tracking", command=request_cancel,
                                 fg_color=("gray60", "gray40"))
     cancel_btn.pack_forget()
- 
-    select_btn = ctk.CTkButton(left, text="Select File", command=select_file)
-    select_btn.pack(pady=6, padx=10, fill="x")
- 
-    ctk.CTkFrame(left, height=2, fg_color=("gray70", "gray35")).pack(
-        fill="x", padx=10, pady=(4, 8))
- 
-    results_panel = ctk.CTkScrollableFrame(left, fg_color=("gray90", "gray20"))
-    results_panel.pack(side="top", fill="both", expand=True, padx=10, pady=(0, 10))
-    ctk.CTkLabel(results_panel, text="Results will appear\nhere after tracking.",
-                 font=ctk.CTkFont(size=12), text_color=("gray50", "gray60"),
-                 justify="center").pack(expand=True, pady=40)
+
+    # Separator line
+    separator = ctk.CTkFrame(
+        left,
+        height=2,
+        fg_color=("gray70", "gray35")
+    )
+    
+    separator.pack(
+        side="top", 
+        fill="x", 
+        padx=10, 
+        pady=(4,8)
+    )
+
+    # Results panel uses remaining available space
+    results_panel =ctk.CTkScrollableFrame(
+        left,
+        fg_color=("gray90", "gray20")
+    )
+
+    results_panel.pack(
+        side="top",
+        fill="both",
+        expand=True,
+        padx=10,
+        pady=(0, 10)
+    )
+    
+    ctk.CTkLabel(results_panel, 
+                 text="Results will appear\nhere after tracking.",
+                 font=ctk.CTkFont(size=12), 
+                 text_color=("gray50", "gray60"),
+                 justify="center"
+            ).pack(expand=True, pady=40)
  
     tab_frames["track"] = frame
     return frame
@@ -1775,6 +1816,7 @@ def build_ui():
  
     root = TkinterDnD.Tk()
     root.geometry("1500x860")
+    root.minsize(1100, 700)
     root.title("Fruit Fly Tracker")
 
     # background properly follows the chosen appearance mode
