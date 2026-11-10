@@ -12,3 +12,6 @@ tkinterdnd2>=0.3.0
 
 # image handling for the GUI preview panel
 Pillow>=10.0.0
+
+# graphing capabilities
+matplotlib>=3.8.0

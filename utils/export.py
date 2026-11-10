@@ -124,10 +124,10 @@ def export_csv(positions, summary, fly_label=None, output_dir=None):
     
 def export_multi_csv(results, output_dir=None):
     """
-    Write multi-fly tracking results to opne CSV (user req)
+    Write multi-fly tracking results to one CSV (user req)
  
     export_csv has a summary block + per-frame block for one fly,
-    b ut this produces two flat tables that span all flies:
+    but this produces two flat tables that span all flies:
  
     1. Summary has one row per fly
     2. Per-frame table has one row per tracked frame per fly,rows are grouped by fly_id then ordered by frame
