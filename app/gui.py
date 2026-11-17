@@ -11,7 +11,7 @@ import queue
 from tracker.tracking import track_fly, build_run_output_dir
 from tracker.multi_tracking import track_flies
 from utils.export import export_csv, export_multi_csv
-from utils.export_plot import export_trace_plot
+from utils.export_plot import export_trace_plot, export_multi_trace_plot
 from utils.config import (
     load_config,
     save_config,
@@ -698,7 +698,7 @@ def set_progress(value, status_text=None):
     root.after(0, do_update)
 
 
-def update_results_panel(summary_or_results, csv_path, multi=False):
+def update_results_panel(summary_or_results, csv_path, plot_path, multi=False):
     """
     Output to the results panel in the bottom half of the left panel
  
@@ -791,6 +791,23 @@ def update_results_panel(summary_or_results, csv_path, multi=False):
         justify="left",
     ).pack(fill="x")
 
+    ctk.CTkLabel(
+        csv_frame,
+        text="Trace Plot",
+        font=ctk.CTkFont(size=12),
+        text_color=("gray50", "gray60"),
+        anchor="w",
+    ).pack(fill="x")
+
+    ctk.CTkLabel(
+        csv_frame,
+        text=os.path.basename(plot_path) if plot_path else "export failed",
+        font=ctk.CTkFont(size=11, weight="bold"),
+        anchor="w",
+        wraplength=200,  # arbitrarily wraping at 200px, within 250px left panel
+        justify="left",
+    ).pack(fill="x")
+
 # separate threads/functions for tracking
 
 def request_cancel():
@@ -852,13 +869,13 @@ def run_tracking(path, scale, roi):
         # when multi fly tracking starts we just label fly_label="fly_0x" etc.
 
         csv_path = export_csv(positions, summary, fly_label=None)
-        export_trace_plot(positions, fly_label="Fly_01")
+        plot_path = export_trace_plot(positions, fly_label="Fly_1")
         
         # when tracking is complete
         root.after(0, lambda: set_progress(1.0))
         root.after(0, lambda: cancel_btn.pack_forget())
         root.after(0, lambda: label.configure(text="Tracking complete!\nSaved to output_videos,\noutput_data, and output_plot"))
-        root.after(0, lambda: update_results_panel(summary, csv_path))
+        root.after(0, lambda: update_results_panel(summary, csv_path, plot_path))
         root.after(0, lambda: select_btn.configure(state="normal"))
 
     except Exception as e:
@@ -902,11 +919,12 @@ def run_multi_tracking(path, scale, rois):
             return
  
         csv_path = export_multi_csv(results)
+        plot_path = export_multi_trace_plot(results)
         n_completed = len(results) 
         root.after(0, lambda: set_progress(1.0, status_text="Done"))
         root.after(0, lambda: cancel_btn.pack_forget())
         root.after(0, lambda: label.configure(text=f"Tracking complete.\n{n_completed}/{n} flies tracked.\nSaved to output_videos"))
-        root.after(0, lambda: update_results_panel(results, csv_path, multi=True))
+        root.after(0, lambda: update_results_panel(results, csv_path, plot_path, multi=True))
         root.after(0, lambda: select_btn.configure(state="normal"))
  
     except Exception as e:

@@ -1,5 +1,4 @@
 import os
-import csv
 import matplotlib
 matplotlib.use("Agg") # Uses Anti-Grain Geometry backend, doesn't show graph when finished processing
 import matplotlib.pyplot as plt
@@ -78,9 +77,9 @@ def export_trace_plot(positions, fly_label=None, output_dir=None):
         tempy = np.array(tempy)
 
         plt.plot(tempx, tempy, label=f"{fly_label}")
-        plt.xlabel("X Coordinate")
-        plt.ylabel("Y Coordinate")
-        plt.title(f"Fruit Fly Path Trace")
+        plt.xlabel("X Coordinate (px)")
+        plt.ylabel("Y Coordinate (px)")
+        plt.title("Fruit Fly Path Trace")
 
         # Reverse the y-axis to show fly moving up the tube
         plt.gca().invert_yaxis()
@@ -131,60 +130,39 @@ def export_multi_trace_plot(results, output_dir=None):
     filepath = os.path.join(output_dir, filename)
  
     try:
-        with open(filepath, "w", newline="") as f:
-            writer = csv.writer(f)
+        for i, (positions, summary) in enumerate(results):
+            fly_id = i + 1
+            tempx = []
+            tempy = []
+
+            # Make temporary copy from positions tuple
+            for frame_num, cx, cy, distance_cm, velocity_cm_s in positions:
+                tempx.append(cx)
+                tempy.append(cy)
+
+            tempx = np.array(tempx)
+            tempy = np.array(tempy)
+            plt.plot(tempx, tempy, label=f"Fly_{fly_id}")
+
+        plt.xlabel("X Coordinate (px)")
+        plt.ylabel("Y Coordinate (px)")
+        plt.title("Fruit Fly Multi Path Trace")
+
+        # Reverse the y-axis to show fly moving up the tube
+        plt.gca().invert_yaxis()
+
+        plt.legend(
+            title="Experimental Runs",
+            loc="best",
+            fontsize=10,
+            frameon=True
+        )
+        plt.savefig(filepath, dpi=300)
+        plt.close()
  
-            # each fly summary
-            writer.writerow(["# SUMMARY (one row per fly)"])
-            writer.writerow([
-                "fly_id",
-                "total_distance_cm", "total_distance_mm",
-                "avg_velocity_cm_s", "active_time_s",
-                "total_frames", "tracked_frames", "pct_tracked",
-            ])
- 
-            for i, (positions, summary) in enumerate(results):
-                fly_id = i + 1
-                writer.writerow([
-                    fly_id,
-                    summary["total_distance_cm"],
-                    round(summary["total_distance_cm"] * 10, 4),
-                    summary["avg_velocity_cm_s"],
-                    summary["active_time_s"],
-                    summary["total_frames"],
-                    summary["tracked_frames"],
-                    summary["pct_tracked"],
-                ])
- 
-            writer.writerow([])
- 
-            # per-frame data ouiput
-            writer.writerow(["# PER-FRAME DATA (one row per tracked frame per fly)"])
-            writer.writerow([
-                "fly_id", "frame", "timestamp_s",
-                "x_px", "y_px", "distance_cm", "velocity_cm_s",
-            ])
- 
-            for i, (positions, summary) in enumerate(results):
-                fly_id = i + 1
-                fps = (summary["tracked_frames"] / summary["active_time_s"]
-                       if summary["active_time_s"] > 0 else 30.0)
- 
-                for frame_num, cx, cy, distance_cm, velocity_cm_s in positions:
-                    timestamp_s = round(frame_num / fps, 4)
-                    writer.writerow([
-                        fly_id,
-                        frame_num,
-                        timestamp_s,
-                        cx,
-                        cy,
-                        round(distance_cm, 6),
-                        round(velocity_cm_s, 4),
-                    ])
- 
-        print(f"Multi CSV saved to: {filepath}")
+        print(f"Multi trace plot saved to: {filepath}")
         return filepath
  
     except Exception as e:
-        print(f"Multi CSV export failed: {e}")
+        print(f"Multi trace plot export failed: {e}")
         return None
