@@ -37,7 +37,6 @@ def generate_plot_filename(fly_label=None, multi=False):
         return f"fly_tracking_{fly_label}_{timestamp}.png"
     return f"fly_tracking_{timestamp}.png"
 
-
 def export_trace_plot(positions, fly_label=None, output_dir=None):
     """
     Write tracking results to graphical plot
@@ -142,11 +141,22 @@ def export_multi_trace_plot(results, output_dir=None):
 
             tempx = np.array(tempx)
             tempy = np.array(tempy)
+            savey = np.array(tempy)
+
+            # Select all values that are not NaN
+            normx_mask = ~np.isnan(tempx)
+            normy_mask = ~np.isnan(tempy)
+
+            # Normalize all coordinates so that trace starts at x=0, y=0
+            tempx[normx_mask] -= tempx[normx_mask][0]
+            tempy[normy_mask] -= tempy[normy_mask][0]
+            tempy[normy_mask] += savey[normy_mask][0]
+
             plt.plot(tempx, tempy, label=f"Fly_{fly_id}")
 
         plt.xlabel("X Coordinate (px)")
         plt.ylabel("Y Coordinate (px)")
-        plt.title("Fruit Fly Multi Path Trace")
+        plt.title("Fruit Fly Normalized Multi Path Trace")
 
         # Reverse the y-axis to show fly moving up the tube
         plt.gca().invert_yaxis()
