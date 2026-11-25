@@ -39,7 +39,7 @@ def generate_plot_filename(fly_label=None, multi=False):
 
 def export_trace_plot(positions, fly_label=None, output_dir=None):
     """
-    Write tracking results to graphical plot
+    Draw tracking results onto a graphical plot
     Displays a graphical representation of a single fly's position
     within the ROI as it travels up the tube.
 
@@ -101,22 +101,18 @@ def export_trace_plot(positions, fly_label=None, output_dir=None):
     
 def export_multi_trace_plot(results, output_dir=None):
     """
-    Write multi-fly tracking results to one CSV (user req)
+    Draw multi-fly tracking results onto a graphical plot
+    Displays a graphical representation of multiple flies' position
+    within each ROI as it travels up the tube.
  
-    export_csv has a summary block + per-frame block for one fly,
-    but this produces two flat tables that span all flies:
- 
-    1. Summary has one row per fly
-    2. Per-frame table has one row per tracked frame per fly,rows are grouped by fly_id then ordered by frame
- 
-    having fly_id as a column (rather than separate files) makes it easy
-    to filter and compare flies in pandas, Excel, or R for future use
+    Furthermore, performs a normalization so that all fruit fly paths originate
+    at the point x=0
  
     args:
         results: list of (positions, summary) tuples returned by track_flies(), in fly_id order (index 0 = fly 1)
         output_dir: override the default output_data/ folder (for testing)
     returns:
-        full path to the saved CSV, or None if export failed
+        full path to the saved PNG, or None if export failed
     """
     if not results:
         print("Multi export skipped: no results to write.")
@@ -141,7 +137,9 @@ def export_multi_trace_plot(results, output_dir=None):
 
             tempx = np.array(tempx)
             tempy = np.array(tempy)
-            savey = np.array(tempy)
+
+            # Preserve the original y value to restore it after normalization
+            save_firsty = tempy[0]
 
             # Select all values that are not NaN
             normx_mask = ~np.isnan(tempx)
@@ -150,7 +148,7 @@ def export_multi_trace_plot(results, output_dir=None):
             # Normalize all coordinates so that trace starts at x=0, y=0
             tempx[normx_mask] -= tempx[normx_mask][0]
             tempy[normy_mask] -= tempy[normy_mask][0]
-            tempy[normy_mask] += savey[normy_mask][0]
+            tempy[normy_mask] += save_firsty
 
             plt.plot(tempx, tempy, label=f"Fly_{fly_id}")
 
