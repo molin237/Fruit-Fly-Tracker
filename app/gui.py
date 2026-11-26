@@ -12,7 +12,7 @@ from tracker.tracking import track_fly, build_run_output_dir
 from tracker.multi_tracking import track_flies
 from utils.export import export_csv, export_multi_csv
 from utils.export_plot import export_trace_plot, export_multi_trace_plot
-from utils.normalization import norm_position
+from utils.normalization import norm_position, norm_results
 from utils.config import (
     load_config,
     save_config,
@@ -921,7 +921,7 @@ def run_multi_tracking(path, scale, rois):
             return
 
         # Perform normalization
-        # TODO
+        results = norm_results(results)
  
         csv_path = export_multi_csv(results)
         plot_path = export_multi_trace_plot(results)

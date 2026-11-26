@@ -46,3 +46,11 @@ def norm_position(positions):
         new_positions.append(data[:1] + (temp_x[i],) + (temp_y[i],) + data[3:])
 
     return new_positions
+
+def norm_results(results):
+    new_results = []
+
+    for i, (positions, summary) in enumerate(results):
+        new_results.append((norm_position(positions), summary))
+
+    return new_results

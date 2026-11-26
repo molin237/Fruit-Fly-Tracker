@@ -78,7 +78,6 @@ def export_trace_plot(positions, fly_label=None, output_dir=None):
         plt.xlabel("X Coordinate (px)")
         plt.ylabel("Y Coordinate (px)")
         plt.title("Fruit Fly Path Trace")
-
         plt.legend(
             title="Experimental Runs",
             loc="upper left",
@@ -123,6 +122,7 @@ def export_multi_trace_plot(results, output_dir=None):
     filepath = os.path.join(output_dir, filename)
  
     try:
+        plt.figure(figsize=(5, 7))
         for i, (positions, summary) in enumerate(results):
             fly_id = i + 1
 
@@ -136,17 +136,17 @@ def export_multi_trace_plot(results, output_dir=None):
             plot_y = np.array(plot_y)
 
             plt.plot(plot_x, plot_y, label=f"Fly {fly_id}")
-
         plt.xlabel("X Coordinate (px)")
         plt.ylabel("Y Coordinate (px)")
         plt.title("Fruit Fly Multi Path Trace")
-
         plt.legend(
             title="Experimental Runs",
-            loc="best",
+            loc="upper left",
             fontsize=10,
-            frameon=True
+            frameon=True,
+            bbox_to_anchor=(1, 1)
         )
+        plt.tight_layout()
         plt.savefig(filepath, dpi=300)
         plt.close()
  
