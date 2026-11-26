@@ -12,6 +12,7 @@ from tracker.tracking import track_fly, build_run_output_dir
 from tracker.multi_tracking import track_flies
 from utils.export import export_csv, export_multi_csv
 from utils.export_plot import export_trace_plot, export_multi_trace_plot
+from utils.normalization import norm_position
 from utils.config import (
     load_config,
     save_config,
@@ -608,7 +609,7 @@ def on_canvas_release(event):
 
     if rw > 0 and rh > 0:
         app_state["roi"] = (rx, ry, rw, rh)
-        label.configure(text=f"ROI selected: x={rx}, y={ry}, w={rw}, h={rh}\nStarting tracking...")
+        label.configure(text=f"ROI selected:\nx={rx}, y={ry}, w={rw}, h={rh}\nStarting tracking...",wraplength=200)
         mode = None
         clear_roi_overlay()
         start_tracking()
@@ -863,13 +864,14 @@ def run_tracking(path, scale, roi):
             root.after(0, finish_cancelled_tracking)
             return
 
+        # Perform normalization
+        positions = norm_position(positions)
+
         # export CSV and return path
         # export trace plot, does not need to use returned path
-        # fly label = None for now since we are doing 1 fly
-        # when multi fly tracking starts we just label fly_label="fly_0x" etc.
 
         csv_path = export_csv(positions, summary, fly_label=None)
-        plot_path = export_trace_plot(positions, fly_label="Fly_1")
+        plot_path = export_trace_plot(positions, fly_label="Fly 1")
         
         # when tracking is complete
         root.after(0, lambda: set_progress(1.0))
@@ -880,7 +882,7 @@ def run_tracking(path, scale, roi):
 
     except Exception as e:
         root.after(0, lambda: cancel_btn.pack_forget())
-        root.after(0, lambda: label.configure(text=f"Tracking failed:\n{e}"))
+        root.after(0, lambda: label.configure(text=f"Tracking failed:\n{e}",wraplength=200))
         root.after(0, lambda: select_btn.configure(state="normal"))
 
 def run_multi_tracking(path, scale, rois):
@@ -917,6 +919,9 @@ def run_multi_tracking(path, scale, rois):
         if cancel_requested:
             root.after(0, finish_cancelled_tracking)
             return
+
+        # Perform normalization
+        # TODO
  
         csv_path = export_multi_csv(results)
         plot_path = export_multi_trace_plot(results)
@@ -929,7 +934,7 @@ def run_multi_tracking(path, scale, rois):
  
     except Exception as e:
         root.after(0, lambda: cancel_btn.pack_forget())
-        root.after(0, lambda: label.configure(text=f"Tracking failed:\n{e}"))
+        root.after(0, lambda: label.configure(text=f"Tracking failed:\n{e}",wraplength=200))
         root.after(0, lambda: select_btn.configure(state="normal"))
 
 def toggle_tracing():

@@ -82,7 +82,8 @@ a = Analysis(
         "tracker.calibration",
         "utils.config",
         "utils.export",
-        "utils.export_plot"
+        "utils.export_plot",
+        "utils.normalization"
     ],
     hookspath=[],
     hooksconfig={},

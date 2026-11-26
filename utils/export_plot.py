@@ -64,31 +64,29 @@ def export_trace_plot(positions, fly_label=None, output_dir=None):
     filepath = os.path.join(output_dir, filename)
 
     try:
-        tempx = []
-        tempy = []
-
         # Make temporary copy from positions tuple
+        plot_x = []
+        plot_y = []
         for frame_num, cx, cy, distance_cm, velocity_cm_s in positions:
-            tempx.append(cx)
-            tempy.append(cy)
+            plot_x.append(cx)
+            plot_y.append(cy)
+        plot_x = np.array(plot_x)
+        plot_y = np.array(plot_y)
 
-        tempx = np.array(tempx)
-        tempy = np.array(tempy)
-
-        plt.plot(tempx, tempy, label=f"{fly_label}")
+        plt.figure(figsize=(5, 7))
+        plt.plot(plot_x, plot_y, label=f"{fly_label}")
         plt.xlabel("X Coordinate (px)")
         plt.ylabel("Y Coordinate (px)")
         plt.title("Fruit Fly Path Trace")
 
-        # Reverse the y-axis to show fly moving up the tube
-        plt.gca().invert_yaxis()
-
         plt.legend(
             title="Experimental Runs",
-            loc="best",
+            loc="upper left",
             fontsize=10,
-            frameon=True
+            frameon=True,
+            bbox_to_anchor=(1, 1)
         )
+        plt.tight_layout()
         plt.savefig(filepath, dpi=300)
         plt.close()
 
@@ -127,37 +125,21 @@ def export_multi_trace_plot(results, output_dir=None):
     try:
         for i, (positions, summary) in enumerate(results):
             fly_id = i + 1
-            tempx = []
-            tempy = []
 
             # Make temporary copy from positions tuple
+            plot_x = []
+            plot_y = []
             for frame_num, cx, cy, distance_cm, velocity_cm_s in positions:
-                tempx.append(cx)
-                tempy.append(cy)
+                plot_x.append(cx)
+                plot_y.append(cy)
+            plot_x = np.array(plot_x)
+            plot_y = np.array(plot_y)
 
-            tempx = np.array(tempx)
-            tempy = np.array(tempy)
-
-            # Preserve the original y value to restore it after normalization
-            save_firsty = tempy[0]
-
-            # Select all values that are not NaN
-            normx_mask = ~np.isnan(tempx)
-            normy_mask = ~np.isnan(tempy)
-
-            # Normalize all coordinates so that trace starts at x=0, y=0
-            tempx[normx_mask] -= tempx[normx_mask][0]
-            tempy[normy_mask] -= tempy[normy_mask][0]
-            tempy[normy_mask] += save_firsty
-
-            plt.plot(tempx, tempy, label=f"Fly_{fly_id}")
+            plt.plot(plot_x, plot_y, label=f"Fly {fly_id}")
 
         plt.xlabel("X Coordinate (px)")
         plt.ylabel("Y Coordinate (px)")
-        plt.title("Fruit Fly Normalized Multi Path Trace")
-
-        # Reverse the y-axis to show fly moving up the tube
-        plt.gca().invert_yaxis()
+        plt.title("Fruit Fly Multi Path Trace")
 
         plt.legend(
             title="Experimental Runs",

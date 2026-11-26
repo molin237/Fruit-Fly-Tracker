@@ -3,7 +3,6 @@ import csv
 from datetime import datetime
 from utils.config import get_app_dir
 
-
 def get_output_dir():
     """
     Return or create path to the output_data folder
