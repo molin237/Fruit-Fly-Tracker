@@ -318,7 +318,8 @@ def track_fly(video_path, scale, is_tracing_enabled=None, output_dir=None, fly_l
               show_live=True, roi=None, search_radius=None,
               frame_callback=None, progress_callback=None,
               use_static_mask=None, bottom_exclusion_px=None,
-              cancel_flag=None):
+              cancel_flag=None, upper_tracking_limit_px=None):
+
     """
     Track a single fruit fly across video frames using adaptive thresholding and contour detection.
 
@@ -369,6 +370,12 @@ def track_fly(video_path, scale, is_tracing_enabled=None, output_dir=None, fly_l
         use_static_mask = cfg.USE_STATIC_MASK
     if bottom_exclusion_px is None:
         bottom_exclusion_px = cfg.STATIC_BOTTOM_EXCLUSION_PX
+    if upper_tracking_limit_px is None:
+        upper_tracking_limit_px = cfg.UPPER_TRACKING_LIMIT_PX
+    upper_tracking_limit_px = int(upper_tracking_limit_px)
+    if upper_tracking_limit_px < 0:
+        cap.release()
+        raise ValueError("Upper tracking limit cannot be negative")
 
     fps = cap.get(cv2.CAP_PROP_FPS)
     if not fps or fps <= 0:
@@ -425,6 +432,7 @@ def track_fly(video_path, scale, is_tracing_enabled=None, output_dir=None, fly_l
     paused = False
     current_frame = None
     next_frame = False
+    stopped_at_upper_limit = False
 
     if show_live:
         cv2.namedWindow("Fly Tracking with Metrics", cv2.WINDOW_NORMAL)
@@ -498,6 +506,7 @@ def track_fly(video_path, scale, is_tracing_enabled=None, output_dir=None, fly_l
         frame_distance = 0.0
         velocity = 0.0
         selected_contour = None
+        reached_upper_limit = False
 
         if contours:
             # size filter only here. Mask filtering is applied further
@@ -586,6 +595,10 @@ def track_fly(video_path, scale, is_tracing_enabled=None, output_dir=None, fly_l
                         total_distance += frame_distance
                     positions.append((frame_count, cx, cy, frame_distance, velocity))
                     prev_position = current_position
+                    # Check whether the fly reached the upper tracking limit.
+                    # Smaller y-values indicate higher positions in the frame.
+                    if upper_tracking_limit_px > 0 and cy <= upper_tracking_limit_px:
+                        reached_upper_limit = True
 
                 cv2.rectangle(frame, (bx, by), (bx + bw, by + bh), (0, 255, 0), 1)
                 cv2.circle(frame, (cx, cy), 3, (0, 0, 255), -1)
@@ -630,6 +643,11 @@ def track_fly(video_path, scale, is_tracing_enabled=None, output_dir=None, fly_l
         # basically shows progress as a fraction 0.0-1.0 when a frame is read
         if progress_callback and frame_advanced and total_frames > 0:
             progress_callback(frame_count / total_frames)
+        # Stop after saving the frame where the fly reached the limit.
+        if reached_upper_limit:
+            stopped_at_upper_limit = True
+            print(f"Upper tracking limit reached at frame {frame_count}")
+            break
 
         if show_live:
             cv2.imshow("Fly Tracking with Metrics", canvas)
@@ -660,7 +678,7 @@ def track_fly(video_path, scale, is_tracing_enabled=None, output_dir=None, fly_l
 
     tracked_frames = len(positions)
     active_time_s = tracked_frames / fps
-    denominator = total_frames if total_frames > 0 else frame_count
+    denominator = (frame_count if stopped_at_upper_limit else (total_frames if total_frames > 0 else frame_count))
     pct_tracked = (tracked_frames / denominator * 100) if denominator > 0 else 0.0
     straightness_score = calculate_vertical_efficiency(positions)
 
@@ -675,9 +693,11 @@ def track_fly(video_path, scale, is_tracing_enabled=None, output_dir=None, fly_l
         "avg_velocity_cm_s": round(avg_velocity, 4),
         "active_time_s":     round(active_time_s, 4),
         "total_frames":      total_frames,
+        "processed_frames": frame_count,
+        "stopped_at_upper_limit": stopped_at_upper_limit,
         "tracked_frames":    tracked_frames,
         "pct_tracked":       round(pct_tracked, 2),
-        "straightness_score": round(straightness_score, 4)
+        "straightness_score": (round(straightness_score, 4) if straightness_score is not None else None)
     }
 
     # clean up and output results 
@@ -691,7 +711,10 @@ def track_fly(video_path, scale, is_tracing_enabled=None, output_dir=None, fly_l
     print(f"Total distance traveled: {total_distance:.2f} cm ({total_distance * 10:.2f} mm)")
     print(f"Active time: {active_time_s:.2f}s")
     print(f"Average velocity: {avg_velocity:.2f} cm/s")
-    print(f"Straightness: {straightness_score:.4f}")
+    if straightness_score is not None:
+        print(f"Straightness: {straightness_score:.4f}")
+    else:
+        print("Straightness: N/A (insufficient movement)")
     print(f"Output saved to: {output_path}")
 
     return positions, summary
