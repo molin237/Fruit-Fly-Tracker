@@ -336,6 +336,32 @@ def redraw_tube_overlay():
 
     redraw_bottom_exclusion_overlay()
 
+    # Draw the upper tracking limit for each tube ROI.
+    upper_limit_px = cfg.UPPER_TRACKING_LIMIT_PX
+
+    if upper_limit_px > 0:
+        for rx, ry, rw, rh in app_state["tube_rois"]:
+
+            if upper_limit_px >= rh:
+                continue
+
+            # Convert the limit from image coordinates
+            # into coordinates on the preview canvas.
+            x1, y = image_to_canvas_coords(
+                rx, ry + upper_limit_px
+            )
+            x2, _ = image_to_canvas_coords(
+                rx + rw, ry + upper_limit_px
+            )
+
+            line_id = preview_canvas.create_line(
+                x1, y, x2, y,
+                fill="yellow",
+                width=3
+            )
+
+            tube_overlay_ids.append(line_id)
+
 def redraw_roi_setup_overlay():
     """Draw cyan dots + boxes for the ROI Setup tab's click session."""
     global tube_overlay_ids
@@ -1767,6 +1793,55 @@ def build_quick_mask_controls(parent):
 
     bottom_excl_value_label.pack(side="left", padx=(0, 12))
 
+def build_upper_limit_controls(parent):
+    """Create a slider to adjust the upper tracking limit."""
+    cfg_data = get_config()
+
+    # Label for the new setting
+    upper_limit_label = ctk.CTkLabel(
+        parent,
+        text="Upper tracking limit:",
+        font=ctk.CTkFont(size=12),
+    )
+    upper_limit_label.pack(side="left", padx=(12, 6))
+
+    # Display the currently selected pixel value
+    initial_value = int(cfg_data.get("upper_tracking_limit_px", 0))
+
+    upper_limit_value_label = ctk.CTkLabel(
+        parent,
+        text="Off" if initial_value == 0 else f"{initial_value}px",
+        font=ctk.CTkFont(size=12),
+        width=44,
+        anchor="w",
+    )
+
+    # Called whenever the user adjusts the slider
+    def on_upper_limit_change(value):
+        v = int(round(float(value)))
+
+        upper_limit_value_label.configure(
+            text="Off" if v == 0 else f"{v}px"
+        )
+
+        save_config({"upper_tracking_limit_px": v})
+        redraw_tube_overlay()
+
+    # Slider ranges from 0 to 400 pixels
+    upper_limit_slider = ctk.CTkSlider(
+        parent,
+        from_=0,
+        to=400,
+        number_of_steps=400,
+        command=on_upper_limit_change,
+        width=180,
+    )
+
+    upper_limit_slider.set(initial_value)
+    upper_limit_slider.pack(side="left", padx=(0, 8), pady=10)
+
+    upper_limit_value_label.pack(side="left", padx=(0, 12))
+
 # APPEARANCE TAB
 def build_appearance_tab(parent):
     frame = ctk.CTkFrame(parent, fg_color="transparent")
@@ -1854,9 +1929,28 @@ def build_ui():
     # next to the preview where the tube bottoms are actually visible
     # Packed with side="bottom" BEFORE the canvas below so it reserves its
     # own fixed strip; the canvas then fills whatever space remains above it.
-    quick_strip = ctk.CTkFrame(right_frame, fg_color=("gray88", "gray22"))
+
+    quick_strip = ctk.CTkFrame(
+        right_frame,
+        fg_color=("gray88", "gray22")
+    )
     quick_strip.pack(side="bottom", fill="x", pady=(8, 0))
-    build_quick_mask_controls(quick_strip)
+
+    # Existing shadow mask and bottom exclusion controls
+    bottom_row = ctk.CTkFrame(
+        quick_strip,
+        fg_color="transparent"
+    )
+    bottom_row.pack(fill="x")
+    build_quick_mask_controls(bottom_row)
+
+    # New upper tracking limit control
+    upper_row = ctk.CTkFrame(
+        quick_strip,
+        fg_color="transparent"
+    )
+    upper_row.pack(fill="x")
+    build_upper_limit_controls(upper_row)
  
     global preview_canvas
     preview_canvas = tk.Canvas(right_frame, bg="black", highlightthickness=0)

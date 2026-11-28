@@ -90,7 +90,7 @@ DEFAULTS = {
     # Stop tracking when the fly reaches this distance
     # in pixels from the top of the tube's ROI.
     # Setting this to 0 disables automatic stopping.
-    "upper_stop_threshold_px": 0,
+    "upper_tracking_limit_px": 0,
 
     # Output naming. Available: {video_name} {basename} {timestamp}
     # for the folder, plus {fly_label} for the filename. Any token left
