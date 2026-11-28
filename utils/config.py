@@ -87,6 +87,11 @@ DEFAULTS = {
     # get painted white, so keep this tunable
     "static_bottom_exclusion_px": 80,
 
+    # Stop tracking when the fly reaches this distance
+    # in pixels from the top of the tube's ROI.
+    # Setting this to 0 disables automatic stopping.
+    "upper_tracking_limit_px": 0,
+
     # Output naming. Available: {video_name} {basename} {timestamp}
     # for the folder, plus {fly_label} for the filename. Any token left
     # empty (e.g. fly_label in single-fly mode) gets cleaned up so you
@@ -330,6 +335,7 @@ def apply(data: dict):
     g["STATIC_MASK_BUILD_MIN_AREA"] = data.get("static_mask_build_min_area", DEFAULTS["static_mask_build_min_area"])
     g["STATIC_MASK_BUILD_MAX_AREA"] = data.get("static_mask_build_max_area", DEFAULTS["static_mask_build_max_area"])
     g["STATIC_BOTTOM_EXCLUSION_PX"] = data.get("static_bottom_exclusion_px", DEFAULTS["static_bottom_exclusion_px"])
+    g["UPPER_TRACKING_LIMIT_PX"] = data.get("upper_tracking_limit_px",DEFAULTS["upper_tracking_limit_px"])
     g["OUTPUT_FOLDER_TEMPLATE"] = data.get("output_folder_template", DEFAULTS["output_folder_template"])
     g["OUTPUT_FILENAME_TEMPLATE"] = data.get("output_filename_template", DEFAULTS["output_filename_template"])
     g["SEARCH_RADIUS"] = data.get("search_radius", DEFAULTS["search_radius"])
@@ -363,6 +369,7 @@ STATIC_MASK_BUILD_BLUR_SIZE = DEFAULTS["static_mask_build_blur_size"]
 STATIC_MASK_BUILD_MIN_AREA = DEFAULTS["static_mask_build_min_area"]
 STATIC_MASK_BUILD_MAX_AREA = DEFAULTS["static_mask_build_max_area"]
 STATIC_BOTTOM_EXCLUSION_PX = DEFAULTS["static_bottom_exclusion_px"]
+UPPER_TRACKING_LIMIT_PX = DEFAULTS["upper_tracking_limit_px"]
 OUTPUT_FOLDER_TEMPLATE = DEFAULTS["output_folder_template"]
 OUTPUT_FILENAME_TEMPLATE = DEFAULTS["output_filename_template"]
 SEARCH_RADIUS = DEFAULTS["search_radius"]
